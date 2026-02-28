@@ -138,6 +138,4 @@ To connect to Power BI / Tableau:
 
 ## 🙋‍♂️ Author
 
-Built as a portfolio project demonstrating **data analytics + frontend visualization** skills.
-
 > ⭐ If you found this useful, drop a star!
