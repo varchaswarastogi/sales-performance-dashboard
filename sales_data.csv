@@ -1,0 +1,35 @@
+transaction_id,date,region,product_category,product_name,units,unit_price,revenue,target,customer_id,rep_name,status
+TXN001,2024-01-05,North America,Electronics,Laptop Pro X,42,1200,50400,45000,CUST_1023,Sarah Kim,Won
+TXN002,2024-01-08,Europe,Software,CRM Suite,15,3200,48000,50000,CUST_2041,Marc Dupont,Won
+TXN003,2024-01-12,Asia Pacific,Software,Analytics Pro,31,2800,86800,70000,CUST_3012,Yuki Tanaka,Won
+TXN004,2024-01-15,Latin America,Apparel,SportswearLine,200,85,17000,30000,CUST_4008,Ana Gomes,Lost
+TXN005,2024-01-18,North America,Services,Support Gold,8,5400,43200,40000,CUST_1087,David Chen,Won
+TXN006,2024-02-03,Europe,Industrial,HeavyDuty Kit,12,4100,49200,45000,CUST_2098,Hans Müller,Won
+TXN007,2024-02-11,Asia Pacific,Accessories,Cable Bundle,380,78,29640,25000,CUST_3045,Li Wei,Won
+TXN008,2024-02-19,North America,Apparel,UrbanWear,145,98,14210,25000,CUST_1142,Sarah Kim,Lost
+TXN009,2024-03-04,North America,Electronics,Monitor HD,89,740,65860,60000,CUST_1203,David Chen,Won
+TXN010,2024-03-14,Europe,Software,Security Suite,22,2100,46200,50000,CUST_2114,Marc Dupont,Won
+TXN011,2024-03-22,Asia Pacific,Electronics,Tablet Gen4,55,680,37400,40000,CUST_3078,Yuki Tanaka,In Progress
+TXN012,2024-04-01,Latin America,Industrial,PumpSystem,9,3800,34200,35000,CUST_4021,Ana Gomes,Won
+TXN013,2024-04-09,North America,Software,ERP Core,6,12000,72000,65000,CUST_1289,Sarah Kim,Won
+TXN014,2024-04-18,Europe,Electronics,Server Rack,14,4200,58800,55000,CUST_2167,Hans Müller,Won
+TXN015,2024-05-02,Asia Pacific,Software,DevOps Tool,41,1800,73800,60000,CUST_3112,Li Wei,Won
+TXN016,2024-05-15,Latin America,Apparel,WorkwearPro,180,72,12960,22000,CUST_4044,Ana Gomes,Lost
+TXN017,2024-05-28,North America,Services,Consulting L2,5,9800,49000,45000,CUST_1312,David Chen,Won
+TXN018,2024-06-07,Europe,Industrial,Generator X,7,6200,43400,48000,CUST_2198,Marc Dupont,In Progress
+TXN019,2024-06-14,North America,Accessories,Peripherals,210,145,30450,28000,CUST_1378,Sarah Kim,Won
+TXN020,2024-06-25,Asia Pacific,Electronics,Smartphone Z,128,520,66560,70000,CUST_3145,Yuki Tanaka,Won
+TXN021,2024-07-08,Latin America,Electronics,TV SmartLine,44,620,27280,30000,CUST_4067,Ana Gomes,Won
+TXN022,2024-07-17,North America,Electronics,Desktop Pro,37,1480,54760,50000,CUST_1421,David Chen,Won
+TXN023,2024-07-26,Europe,Software,Collaboration,29,2400,69600,65000,CUST_2231,Hans Müller,Won
+TXN024,2024-08-04,Asia Pacific,Accessories,Power Banks,450,64,28800,25000,CUST_3189,Li Wei,Won
+TXN025,2024-08-13,North America,Services,Support Plat,12,6100,73200,68000,CUST_1489,Sarah Kim,Won
+TXN026,2024-09-02,Europe,Industrial,DrillSystem,11,4800,52800,50000,CUST_2278,Marc Dupont,Won
+TXN027,2024-09-19,Asia Pacific,Software,AI Assistant,67,2200,147400,120000,CUST_3223,Yuki Tanaka,Won
+TXN028,2024-10-05,Latin America,Industrial,CompressorKit,14,3600,50400,48000,CUST_4091,Ana Gomes,Won
+TXN029,2024-10-14,North America,Electronics,NAS Server,28,2100,58800,55000,CUST_1543,David Chen,Won
+TXN030,2024-11-01,Europe,Electronics,Workstation,19,3800,72200,70000,CUST_2312,Hans Müller,Won
+TXN031,2024-11-22,Asia Pacific,Electronics,VR Headset,84,840,70560,65000,CUST_3267,Li Wei,Won
+TXN032,2024-12-03,North America,Electronics,Gaming PC,62,2800,173600,150000,CUST_1601,Sarah Kim,Won
+TXN033,2024-12-12,Latin America,Apparel,WinterLine,240,95,22800,40000,CUST_4118,Ana Gomes,Lost
+TXN034,2024-12-20,Europe,Software,DataVault,34,3100,105400,90000,CUST_2356,Marc Dupont,Won

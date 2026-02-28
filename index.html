@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sales Performance Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="scanline"></div>
+<div class="noise"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <span class="brand-icon">▣</span>
+    <span class="brand-name">SalesPulse</span>
+  </div>
+  <nav class="nav">
+    <a href="#" class="nav-item active" data-view="overview">
+      <span class="nav-icon">⬡</span> Overview
+    </a>
+    <a href="#" class="nav-item" data-view="regions">
+      <span class="nav-icon">◈</span> Regions
+    </a>
+    <a href="#" class="nav-item" data-view="products">
+      <span class="nav-icon">◇</span> Products
+    </a>
+    <a href="#" class="nav-item" data-view="trends">
+      <span class="nav-icon">△</span> Trends
+    </a>
+    <a href="#" class="nav-item" data-view="kpis">
+      <span class="nav-icon">◉</span> KPIs
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="status-dot"></div>
+    <span>Live Data</span>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1 class="page-title">Sales Performance Dashboard</h1>
+      <p class="page-sub">FY 2024 · Global Analytics</p>
+    </div>
+    <div class="topbar-right">
+      <select class="filter-select" id="yearFilter">
+        <option value="2024">FY 2024</option>
+        <option value="2023">FY 2023</option>
+        <option value="2022">FY 2022</option>
+      </select>
+      <select class="filter-select" id="regionFilter">
+        <option value="all">All Regions</option>
+        <option value="north">North America</option>
+        <option value="europe">Europe</option>
+        <option value="asia">Asia Pacific</option>
+        <option value="latam">Latin America</option>
+      </select>
+      <button class="export-btn" onclick="exportData()">↓ Export</button>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <section class="kpi-grid">
+    <div class="kpi-card" data-trend="up">
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="kpi-revenue">$4.82M</div>
+      <div class="kpi-change positive">↑ 18.4% vs last year</div>
+      <div class="kpi-spark" id="spark-revenue"></div>
+    </div>
+    <div class="kpi-card" data-trend="up">
+      <div class="kpi-label">Units Sold</div>
+      <div class="kpi-value" id="kpi-units">127,340</div>
+      <div class="kpi-change positive">↑ 11.2% vs last year</div>
+      <div class="kpi-spark" id="spark-units"></div>
+    </div>
+    <div class="kpi-card" data-trend="down">
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value" id="kpi-aov">$37.84</div>
+      <div class="kpi-change negative">↓ 3.1% vs last year</div>
+      <div class="kpi-spark" id="spark-aov"></div>
+    </div>
+    <div class="kpi-card" data-trend="up">
+      <div class="kpi-label">Win Rate</div>
+      <div class="kpi-value" id="kpi-win">68.3%</div>
+      <div class="kpi-change positive">↑ 5.7% vs last year</div>
+      <div class="kpi-spark" id="spark-win"></div>
+    </div>
+    <div class="kpi-card" data-trend="neutral">
+      <div class="kpi-label">Customer Count</div>
+      <div class="kpi-value" id="kpi-customers">8,921</div>
+      <div class="kpi-change neutral">→ 0.3% vs last year</div>
+      <div class="kpi-spark" id="spark-customers"></div>
+    </div>
+  </section>
+
+  <!-- CHARTS ROW 1 -->
+  <section class="charts-row">
+    <div class="chart-card wide">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Monthly Revenue Trend</div>
+          <div class="chart-sub">Jan – Dec 2024 vs 2023</div>
+        </div>
+        <div class="chart-legend">
+          <span class="legend-dot" style="background:#E8FF47"></span> 2024
+          <span class="legend-dot" style="background:#ffffff33"></span> 2023
+        </div>
+      </div>
+      <canvas id="revenueChart" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Revenue by Region</div>
+          <div class="chart-sub">Distribution FY2024</div>
+        </div>
+      </div>
+      <canvas id="regionChart" height="220"></canvas>
+    </div>
+  </section>
+
+  <!-- CHARTS ROW 2 -->
+  <section class="charts-row">
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Product Category Performance</div>
+          <div class="chart-sub">Revenue vs Target</div>
+        </div>
+      </div>
+      <canvas id="productChart" height="220"></canvas>
+    </div>
+    <div class="chart-card wide">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">Quarterly Sales Pipeline</div>
+          <div class="chart-sub">Won · Lost · In Progress</div>
+        </div>
+      </div>
+      <canvas id="pipelineChart" height="200"></canvas>
+    </div>
+  </section>
+
+  <!-- DATA TABLE -->
+  <section class="table-section">
+    <div class="table-header">
+      <div class="chart-title">Regional Performance Breakdown</div>
+      <input class="search-input" id="tableSearch" placeholder="Search region or product..." oninput="filterTable(this.value)">
+    </div>
+    <div class="table-wrap">
+      <table class="perf-table" id="perfTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Region ↕</th>
+            <th onclick="sortTable(1)">Product Category ↕</th>
+            <th onclick="sortTable(2)">Revenue ↕</th>
+            <th onclick="sortTable(3)">Units ↕</th>
+            <th onclick="sortTable(4)">Target ↕</th>
+            <th onclick="sortTable(5)">Achievement ↕</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- INSIGHTS PANEL -->
+  <section class="insights-grid">
+    <div class="insight-card high">
+      <div class="insight-badge">🏆 Top Performer</div>
+      <div class="insight-title">North America — Electronics</div>
+      <div class="insight-desc">Exceeded target by 34%. Highest AOV at $89. Drives 28% of global revenue. Q4 surge driven by holiday campaign.</div>
+    </div>
+    <div class="insight-card warn">
+      <div class="insight-badge">⚠ Underperforming</div>
+      <div class="insight-title">Latin America — Apparel</div>
+      <div class="insight-desc">64% target achievement. Supply chain delays impacted Q2–Q3. Recommend pricing review and logistics optimization.</div>
+    </div>
+    <div class="insight-card neutral">
+      <div class="insight-badge">📈 Growth Opportunity</div>
+      <div class="insight-title">Asia Pacific — Software</div>
+      <div class="insight-desc">YoY growth of 41%. Fastest growing segment. Prioritize sales headcount expansion and localization for FY2025.</div>
+    </div>
+    <div class="insight-card info">
+      <div class="insight-badge">🔍 Watch</div>
+      <div class="insight-title">Europe — Industrial</div>
+      <div class="insight-desc">Flat at 2% growth. Regulatory shifts in Q3 affected margins. Monitor closely, consider portfolio restructuring.</div>
+    </div>
+  </section>
+
+</main>
+
+<script src="src/data.js"></script>
+<script src="src/charts.js"></script>
+<script src="src/table.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>
