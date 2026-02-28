@@ -135,11 +135,6 @@ To connect to Power BI / Tableau:
 
 ---
 
-## 📄 License
-
-MIT © 2024 — Free to use, modify, and distribute.
-
----
 
 ## 🙋‍♂️ Author
 
