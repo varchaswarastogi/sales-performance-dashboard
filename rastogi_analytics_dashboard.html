@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rastogi Analytics — Sales Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#07090f;
+  --surface:#0d1117;
+  --card:#111827;
+  --card2:#161f2e;
+  --border:#1f2d42;
+  --accent:#38bdf8;
+  --gold:#f59e0b;
+  --green:#10b981;
+  --red:#f43f5e;
+  --purple:#a78bfa;
+  --orange:#fb923c;
+  --text:#f1f5f9;
+  --muted:#64748b;
+  --soft:#94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Outfit',sans-serif;
+  font-size:14px;
+  min-height:100vh;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(56,189,248,.06),transparent),
+             radial-gradient(ellipse 60% 40% at 80% 100%,rgba(167,139,250,.05),transparent);
+  pointer-events:none;z-index:0;
+}
+.wrap{position:relative;z-index:1}
+
+/* ── HEADER ─────────────────────────────── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 28px;
+  background:rgba(7,9,15,.85);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:200;
+}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-logo{
+  width:38px;height:38px;border-radius:10px;
+  background:linear-gradient(135deg,#38bdf8,#a78bfa);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;color:#fff;
+  font-family:'Space Mono',monospace;
+}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:-.4px}
+.brand-name em{font-style:normal;color:var(--accent)}
+.brand-sub{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:20px}
+.live{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);letter-spacing:.8px;text-transform:uppercase}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hdate{font-size:11px;color:var(--muted)}
+
+/* ── FILTER BAR ──────────────────────────── */
+.filters{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:12px 28px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.flabel{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px;white-space:nowrap}
+.pill-group{display:flex;gap:6px}
+.pill{
+  padding:5px 13px;border-radius:20px;cursor:pointer;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-family:'Outfit',sans-serif;font-size:11px;
+  transition:all .18s;
+}
+.pill:hover{border-color:var(--accent);color:var(--accent)}
+.pill.on{background:rgba(56,189,248,.12);border-color:var(--accent);color:var(--accent);font-weight:600}
+.fsep{width:1px;height:22px;background:var(--border)}
+.fsel{
+  padding:5px 12px;border-radius:8px;
+  background:var(--card);border:1px solid var(--border);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:11px;
+  outline:none;cursor:pointer;
+  transition:border-color .18s;
+}
+.fsel:focus{border-color:var(--accent)}
+.reset-btn{
+  margin-left:auto;padding:5px 14px;border-radius:8px;
+  background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);
+  color:var(--red);font-family:'Outfit',sans-serif;font-size:11px;
+  cursor:pointer;transition:all .18s;
+}
+.reset-btn:hover{background:rgba(244,63,94,.2)}
+
+/* ── MAIN ────────────────────────────────── */
+.main{padding:22px 28px;display:flex;flex-direction:column;gap:20px}
+
+/* ── KPI STRIP ───────────────────────────── */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px 20px;position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+  animation:up .5s ease both;
+}
+.kpi:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.kpi::after{
+  content:'';position:absolute;inset:0;opacity:0;
+  transition:opacity .2s;
+  background:linear-gradient(135deg,rgba(56,189,248,.04),transparent);
+}
+.kpi:hover::after{opacity:1}
+.kpi-top{width:2px;height:100%;position:absolute;top:0;left:0;border-radius:14px 0 0 14px}
+.kpi:nth-child(1) .kpi-top{background:var(--accent)}
+.kpi:nth-child(2) .kpi-top{background:var(--green)}
+.kpi:nth-child(3) .kpi-top{background:var(--gold)}
+.kpi:nth-child(4) .kpi-top{background:var(--purple)}
+.kpi:nth-child(5) .kpi-top{background:var(--orange)}
+.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.kpi-val{font-size:24px;font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:6px}
+.kpi-change{font-size:11px;display:flex;align-items:center;gap:3px}
+.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--muted)}
+.kpi-glyph{position:absolute;right:16px;bottom:14px;font-size:26px;opacity:.1}
+@keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SECTION LABEL ───────────────────────── */
+.sec-label{
+  font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1.5px;padding:0 2px;margin-bottom:2px;
+}
+
+/* ── CHART CARDS ─────────────────────────── */
+.row{display:grid;gap:14px}
+.row-2{grid-template-columns:2fr 1.1fr}
+.row-3{grid-template-columns:1fr 1fr 1fr}
+.row-2b{grid-template-columns:1.2fr 1fr}
+
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:20px;animation:up .55s ease .2s both;
+}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
+.card-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.card-sub{font-size:10px;color:var(--muted);margin-top:3px}
+.tag{padding:3px 9px;border-radius:12px;font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+.t1{background:rgba(56,189,248,.1);color:var(--accent)}
+.t2{background:rgba(251,146,60,.1);color:var(--orange)}
+.t3{background:rgba(16,185,129,.1);color:var(--green)}
+.t4{background:rgba(167,139,250,.1);color:var(--purple)}
+.t5{background:rgba(245,158,11,.1);color:var(--gold)}
+
+/* ── REGIONAL TABLE ──────────────────────── */
+.rtable{width:100%;border-collapse:collapse}
+.rtable th{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+  padding:6px 10px;border-bottom:1px solid var(--border);text-align:left}
+.rtable td{padding:9px 10px;font-size:12px;border-bottom:1px solid rgba(31,45,66,.5)}
+.rtable tr:last-child td{border:none}
+.rtable tr:hover td{background:rgba(56,189,248,.03)}
+.mbar-wrap{display:flex;align-items:center;gap:7px}
+.mbar{height:4px;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--purple));min-width:2px}
+.badge{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.b-up{background:rgba(16,185,129,.12);color:var(--green)}
+.b-dn{background:rgba(244,63,94,.12);color:var(--red)}
+.b-na{background:rgba(100,116,139,.1);color:var(--muted)}
+
+/* ── INSIGHTS ─────────────────────────────── */
+.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ins{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:10px;padding:15px;
+  border-left:3px solid;transition:transform .2s;
+}
+.ins:hover{transform:translateX(4px)}
+.ins.pos{border-left-color:var(--green)}
+.ins.neg{border-left-color:var(--red)}
+.ins.neu{border-left-color:var(--gold)}
+.ins-type{font-size:9px;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;margin-bottom:5px}
+.ins.pos .ins-type{color:var(--green)}
+.ins.neg .ins-type{color:var(--red)}
+.ins.neu .ins-type{color:var(--gold)}
+.ins-text{font-size:11px;line-height:1.65;color:var(--soft)}
+
+/* ── FILTER CONTEXT BANNER ───────────────── */
+.ctx-bar{
+  display:none;align-items:center;gap:10px;
+  padding:10px 16px;border-radius:10px;
+  background:rgba(56,189,248,.07);
+  border:1px solid rgba(56,189,248,.2);
+  font-size:12px;color:var(--accent);margin-bottom:4px;
+}
+.ctx-bar.show{display:flex}
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media(max-width:1100px){
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .row-2,.row-2b{grid-template-columns:1fr}
+  .row-3{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .kpi-strip{grid-template-columns:1fr 1fr}
+  .row-3{grid-template-columns:1fr}
+  .ins-grid{grid-template-columns:1fr}
+  .main{padding:14px}
+  .filters{padding:10px 14px}
+  header{padding:14px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-logo">RA</div>
+    <div>
+      <div class="brand-name">Rastogi <em>Analytics</em></div>
+      <div class="brand-sub">Sales Intelligence Platform</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live"><div class="dot"></div>Live</div>
+    <div class="hdate" id="hdate"></div>
+  </div>
+</header>
+
+<!-- FILTERS -->
+<div class="filters">
+  <span class="flabel">Period</span>
+  <div class="pill-group" id="periodPills">
+    <button class="pill on" onclick="setPeriod('all',this)">All Time</button>
+    <button class="pill" onclick="setPeriod('2023',this)">2023</button>
+    <button class="pill" onclick="setPeriod('2024',this)">2024</button>
+    <button class="pill" onclick="setPeriod('H1-2024',this)">H1 2024</button>
+    <button class="pill" onclick="setPeriod('H2-2024',this)">H2 2024</button>
+    <button class="pill" onclick="setPeriod('Q4-2024',this)">Q4 2024</button>
+  </div>
+  <div class="fsep"></div>
+  <span class="flabel">Region</span>
+  <select class="fsel" id="fRegion" onchange="applyFilters()">
+    <option value="all">All Regions</option>
+    <option value="West">West</option>
+    <option value="East">East</option>
+    <option value="South">South</option>
+    <option value="Central">Central</option>
+  </select>
+  <div class="fsep"></div>
+  <span class="flabel">Category</span>
+  <select class="fsel" id="fCat" onchange="applyFilters()">
+    <option value="all">All Categories</option>
+    <option value="Technology">Technology</option>
+    <option value="Furniture">Furniture</option>
+    <option value="Office Supplies">Office Supplies</option>
+  </select>
+  <div class="fsep"></div>
+  <span class="flabel">Segment</span>
+  <select class="fsel" id="fSeg" onchange="applyFilters()">
+    <option value="all">All Segments</option>
+    <option value="Consumer">Consumer</option>
+    <option value="Corporate">Corporate</option>
+  </select>
+  <button class="reset-btn" onclick="resetFilters()">✕ Reset</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- Context Banner -->
+  <div class="ctx-bar" id="ctxBar">
+    <span>🔍</span>
+    <span id="ctxText"></span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-top"></div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-val" id="kSales">—</div>
+      <div class="kpi-change" id="kSalesC">—</div>
+      <div class="kpi-glyph">💰</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top"></div>
+      <div class="kpi-label">Net Profit</div>
+      <div class="kpi-val" id="kProfit">—</div>
+      <div class="kpi-change" id="kProfitC">—</div>
+      <div class="kpi-glyph">📈</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top"></div>
+      <div class="kpi-label">Profit Margin</div>
+      <div class="kpi-val" id="kMargin">—</div>
+      <div class="kpi-change neutral" id="kMarginC">gross margin</div>
+      <div class="kpi-glyph">🎯</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top"></div>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-val" id="kOrders">—</div>
+      <div class="kpi-change" id="kOrdersC">—</div>
+      <div class="kpi-glyph">📦</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-top"></div>
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-val" id="kAOV">—</div>
+      <div class="kpi-change neutral" id="kAOVC">per transaction</div>
+      <div class="kpi-glyph">🛒</div>
+    </div>
+  </div>
+
+  <!-- ROW 1: Trend + Region/State -->
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Revenue & Profit Trend</div>
+          <div class="card-sub" id="trendSub">Monthly performance over selected period</div>
+        </div>
+        <span class="tag t1">TIME SERIES</span>
+      </div>
+      <canvas id="cTrend" height="200"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title" id="regionChartTitle">Sales by Region</div>
+          <div class="card-sub" id="regionChartSub">Ranked revenue comparison</div>
+        </div>
+        <span class="tag t2">REGIONAL</span>
+      </div>
+      <canvas id="cRegion" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- ROW 2: Category + Subcategory + Margin -->
+  <div class="row row-3">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Sales by Category</div>
+          <div class="card-sub">Revenue distribution breakdown</div>
+        </div>
+        <span class="tag t3">CATEGORY</span>
+      </div>
+      <canvas id="cCat" height="210"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Top Sub-Categories</div>
+          <div class="card-sub">Highest performing product lines</div>
+        </div>
+        <span class="tag t4">PRODUCT</span>
+      </div>
+      <canvas id="cSub" height="210"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Margin by Category</div>
+          <div class="card-sub">Profitability benchmarks</div>
+        </div>
+        <span class="tag t5">MARGIN %</span>
+      </div>
+      <canvas id="cMargin" height="210"></canvas>
+    </div>
+  </div>
+
+  <!-- ROW 3: Table + Quarterly -->
+  <div class="row row-2b">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title" id="tableTitle">Regional Performance Table</div>
+          <div class="card-sub">Sales · Profit · Margin · YoY Growth</div>
+        </div>
+        <span class="tag t2">BREAKDOWN</span>
+      </div>
+      <table class="rtable">
+        <thead>
+          <tr>
+            <th id="tableCol1Hdr">Region</th>
+            <th>Revenue</th>
+            <th>Profit</th>
+            <th>Margin</th>
+            <th>Share</th>
+            <th>YoY</th>
+          </tr>
+        </thead>
+        <tbody id="tBody"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Quarterly Revenue</div>
+          <div class="card-sub">2023 vs 2024 side-by-side</div>
+        </div>
+        <span class="tag t1">QUARTERLY</span>
+      </div>
+      <canvas id="cQtr" height="210"></canvas>
+    </div>
+  </div>
+
+  <!-- Segment chart row -->
+  <div class="row row-2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Consumer vs Corporate</div>
+          <div class="card-sub">Segment revenue split over time</div>
+        </div>
+        <span class="tag t4">SEGMENT</span>
+      </div>
+      <canvas id="cSegment" height="190"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Discount Impact on Profit</div>
+          <div class="card-sub">How discounting affects margins</div>
+        </div>
+        <span class="tag t5">DISCOUNT</span>
+      </div>
+      <canvas id="cDiscount" height="190"></canvas>
+    </div>
+  </div>
+
+  <!-- Insights -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">💡 Analyst Insights & Action Items</div>
+        <div class="card-sub">Auto-generated from filtered dataset</div>
+      </div>
+      <span class="tag t3">INSIGHTS</span>
+    </div>
+    <div class="ins-grid" id="insGrid"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- FOOTER -->
+<div style="padding:14px 28px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.4px">
+  <span>© 2024 <span style="color:var(--accent)">Rastogi Analytics</span> · Sales Intelligence Platform · 200 Orders · Jan 2023 – Dec 2024</span>
+  <span>Power BI / Tableau Portfolio Project</span>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ============================================================
+// DATASET — realistic regional variance built in:
+// West: Strong Technology, high AOV (Silicon Valley / Seattle)
+// East: Balanced Tech + Furniture, corporate-heavy
+// South: Mid-range, more consumer, lower margins (furniture drag)
+// Central: Office Supplies dominant, lower AOV, decent margins
+// ============================================================
+const DATA = [
+ // ── WEST (high-value tech + premium furniture) ─────────────
+ {d:"2023-01-05",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2499,p:499.8,disc:0},
+ {d:"2023-01-10",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1200,p:312,disc:0},
+ {d:"2023-01-20",r:"West",st:"Washington",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1450,p:203,disc:.05},
+ {d:"2023-02-03",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3199,p:671.8,disc:0},
+ {d:"2023-02-14",r:"West",st:"Oregon",cat:"Technology",sub:"Accessories",seg:"Consumer",s:349,p:104.7,disc:0},
+ {d:"2023-02-22",r:"West",st:"Nevada",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:890,p:133.5,disc:.05},
+ {d:"2023-03-05",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1399,p:279.8,disc:0},
+ {d:"2023-03-15",r:"West",st:"Washington",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2799,p:559.8,disc:0},
+ {d:"2023-03-28",r:"West",st:"Arizona",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1100,p:165,disc:.1},
+ {d:"2023-04-06",r:"West",st:"California",cat:"Technology",sub:"Accessories",seg:"Consumer",s:599,p:179.7,disc:0},
+ {d:"2023-04-18",r:"West",st:"Colorado",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:285,p:85.5,disc:0},
+ {d:"2023-04-25",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1299,p:259.8,disc:0},
+ {d:"2023-05-09",r:"West",st:"Oregon",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:620,p:93,disc:0},
+ {d:"2023-05-19",r:"West",st:"Washington",cat:"Technology",sub:"Phones",seg:"Corporate",s:1099,p:219.8,disc:0},
+ {d:"2023-06-02",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3499,p:699.8,disc:0},
+ {d:"2023-06-15",r:"West",st:"Nevada",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:760,p:152,disc:.05},
+ {d:"2023-06-28",r:"West",st:"Arizona",cat:"Office Supplies",sub:"Paper",seg:"Consumer",s:95,p:28.5,disc:0},
+ {d:"2023-07-07",r:"West",st:"California",cat:"Technology",sub:"Accessories",seg:"Consumer",s:799,p:239.7,disc:0},
+ {d:"2023-07-19",r:"West",st:"Colorado",cat:"Technology",sub:"Phones",seg:"Consumer",s:999,p:199.8,disc:0},
+ {d:"2023-08-03",r:"West",st:"Washington",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2199,p:439.8,disc:0},
+ {d:"2023-08-15",r:"West",st:"California",cat:"Furniture",sub:"Tables",seg:"Consumer",s:1800,p:270,disc:.1},
+ {d:"2023-08-27",r:"West",st:"Oregon",cat:"Office Supplies",sub:"Binders",seg:"Corporate",s:120,p:36,disc:0},
+ {d:"2023-09-04",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1599,p:319.8,disc:0},
+ {d:"2023-09-18",r:"West",st:"Nevada",cat:"Technology",sub:"Accessories",seg:"Corporate",s:449,p:134.7,disc:0},
+ {d:"2023-09-29",r:"West",st:"Arizona",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:680,p:102,disc:0},
+ {d:"2023-10-08",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2999,p:599.8,disc:0},
+ {d:"2023-10-20",r:"West",st:"Washington",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1350,p:202.5,disc:.05},
+ {d:"2023-11-02",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1899,p:379.8,disc:0},
+ {d:"2023-11-18",r:"West",st:"Oregon",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1499,p:299.8,disc:0},
+ {d:"2023-11-28",r:"West",st:"Colorado",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:320,p:96,disc:0},
+ {d:"2023-12-05",r:"West",st:"California",cat:"Technology",sub:"Accessories",seg:"Consumer",s:899,p:269.7,disc:0},
+ {d:"2023-12-14",r:"West",st:"Nevada",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:780,p:117,disc:.05},
+ {d:"2023-12-22",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3299,p:659.8,disc:0},
+ {d:"2024-01-06",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3499,p:699.8,disc:0},
+ {d:"2024-01-15",r:"West",st:"Washington",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1650,p:247.5,disc:.05},
+ {d:"2024-02-07",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1699,p:339.8,disc:0},
+ {d:"2024-02-20",r:"West",st:"Oregon",cat:"Technology",sub:"Accessories",seg:"Consumer",s:699,p:209.7,disc:0},
+ {d:"2024-03-04",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3999,p:799.8,disc:0},
+ {d:"2024-03-17",r:"West",st:"Nevada",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:990,p:198,disc:.05},
+ {d:"2024-04-02",r:"West",st:"Arizona",cat:"Office Supplies",sub:"Binders",seg:"Consumer",s:140,p:42,disc:0},
+ {d:"2024-04-14",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1799,p:359.8,disc:0},
+ {d:"2024-05-08",r:"West",st:"Washington",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2899,p:579.8,disc:0},
+ {d:"2024-05-22",r:"West",st:"Colorado",cat:"Furniture",sub:"Tables",seg:"Consumer",s:1500,p:225,disc:.05},
+ {d:"2024-06-05",r:"West",st:"California",cat:"Technology",sub:"Accessories",seg:"Consumer",s:999,p:299.7,disc:0},
+ {d:"2024-06-19",r:"West",st:"Oregon",cat:"Technology",sub:"Phones",seg:"Corporate",s:1299,p:259.8,disc:0},
+ {d:"2024-07-03",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:4199,p:839.8,disc:0},
+ {d:"2024-07-17",r:"West",st:"Nevada",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:850,p:127.5,disc:0},
+ {d:"2024-08-01",r:"West",st:"Washington",cat:"Technology",sub:"Accessories",seg:"Corporate",s:799,p:239.7,disc:0},
+ {d:"2024-08-15",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:1999,p:399.8,disc:0},
+ {d:"2024-09-04",r:"West",st:"Arizona",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1800,p:270,disc:.1},
+ {d:"2024-09-20",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3699,p:739.8,disc:0},
+ {d:"2024-10-05",r:"West",st:"Oregon",cat:"Technology",sub:"Accessories",seg:"Consumer",s:599,p:179.7,disc:0},
+ {d:"2024-10-18",r:"West",st:"Colorado",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:380,p:114,disc:0},
+ {d:"2024-11-01",r:"West",st:"California",cat:"Technology",sub:"Phones",seg:"Consumer",s:2199,p:439.8,disc:0},
+ {d:"2024-11-14",r:"West",st:"Washington",cat:"Technology",sub:"Laptops",seg:"Corporate",s:3299,p:659.8,disc:0},
+ {d:"2024-12-03",r:"West",st:"Nevada",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:1100,p:165,disc:.05},
+ {d:"2024-12-16",r:"West",st:"California",cat:"Technology",sub:"Laptops",seg:"Corporate",s:4499,p:899.8,disc:0},
+ {d:"2024-12-28",r:"West",st:"Arizona",cat:"Technology",sub:"Accessories",seg:"Corporate",s:1199,p:359.7,disc:0},
+
+ // ── EAST (mixed corporate, finance corridor) ───────────────
+ {d:"2023-01-08",r:"East",st:"New York",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1850,p:370,disc:.05},
+ {d:"2023-01-18",r:"East",st:"Pennsylvania",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:720,p:108,disc:0},
+ {d:"2023-01-30",r:"East",st:"Massachusetts",cat:"Office Supplies",sub:"Paper",seg:"Consumer",s:52,p:15.6,disc:0},
+ {d:"2023-02-09",r:"East",st:"New York",cat:"Technology",sub:"Phones",seg:"Consumer",s:1099,p:219.8,disc:0},
+ {d:"2023-02-20",r:"East",st:"New Jersey",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1650,p:330,disc:0},
+ {d:"2023-03-04",r:"East",st:"Connecticut",cat:"Furniture",sub:"Tables",seg:"Corporate",s:980,p:147,disc:.1},
+ {d:"2023-03-19",r:"East",st:"New York",cat:"Technology",sub:"Accessories",seg:"Consumer",s:349,p:104.7,disc:0},
+ {d:"2023-03-29",r:"East",st:"Virginia",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1899,p:379.8,disc:0},
+ {d:"2023-04-10",r:"East",st:"Maryland",cat:"Office Supplies",sub:"Binders",seg:"Corporate",s:78,p:23.4,disc:0},
+ {d:"2023-04-22",r:"East",st:"Pennsylvania",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:650,p:97.5,disc:.05},
+ {d:"2023-05-06",r:"East",st:"New York",cat:"Technology",sub:"Phones",seg:"Consumer",s:999,p:199.8,disc:.05},
+ {d:"2023-05-17",r:"East",st:"Massachusetts",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2099,p:419.8,disc:0},
+ {d:"2023-05-28",r:"East",st:"New Jersey",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:580,p:87,disc:0},
+ {d:"2023-06-09",r:"East",st:"New York",cat:"Technology",sub:"Accessories",seg:"Consumer",s:549,p:164.7,disc:0},
+ {d:"2023-06-20",r:"East",st:"Connecticut",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:185,p:55.5,disc:0},
+ {d:"2023-07-03",r:"East",st:"Virginia",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1799,p:359.8,disc:0},
+ {d:"2023-07-14",r:"East",st:"New York",cat:"Technology",sub:"Phones",seg:"Consumer",s:1199,p:239.8,disc:0},
+ {d:"2023-07-25",r:"East",st:"Maryland",cat:"Furniture",sub:"Tables",seg:"Consumer",s:780,p:117,disc:0},
+ {d:"2023-08-07",r:"East",st:"Pennsylvania",cat:"Technology",sub:"Accessories",seg:"Consumer",s:299,p:89.7,disc:0},
+ {d:"2023-08-19",r:"East",st:"New Jersey",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1999,p:399.8,disc:0},
+ {d:"2023-09-01",r:"East",st:"New York",cat:"Technology",sub:"Phones",seg:"Consumer",s:1299,p:259.8,disc:0},
+ {d:"2023-09-14",r:"East",st:"Massachusetts",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:890,p:133.5,disc:.05},
+ {d:"2023-10-03",r:"East",st:"New York",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2299,p:459.8,disc:0},
+ {d:"2023-10-16",r:"East",st:"Connecticut",cat:"Technology",sub:"Accessories",seg:"Consumer",s:449,p:134.7,disc:0},
+ {d:"2023-11-06",r:"East",st:"Virginia",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1100,p:165,disc:.05},
+ {d:"2023-11-19",r:"East",st:"New York",cat:"Technology",sub:"Phones",seg:"Consumer",s:1399,p:279.8,disc:0},
+ {d:"2023-12-02",r:"East",st:"New Jersey",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1699,p:339.8,disc:0},
+ {d:"2023-12-20",r:"East",st:"Maryland",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:145,p:43.5,disc:0},
+ {d:"2024-01-09",r:"East",st:"New York",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2599,p:519.8,disc:0},
+ {d:"2024-01-22",r:"East",st:"Pennsylvania",cat:"Technology",sub:"Phones",seg:"Consumer",s:1499,p:299.8,disc:0},
+ {d:"2024-02-05",r:"East",st:"Massachusetts",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:1100,p:165,disc:.05},
+ {d:"2024-02-18",r:"East",st:"New Jersey",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2099,p:419.8,disc:0},
+ {d:"2024-03-07",r:"East",st:"New York",cat:"Technology",sub:"Accessories",seg:"Consumer",s:699,p:209.7,disc:0},
+ {d:"2024-03-21",r:"East",st:"Virginia",cat:"Technology",sub:"Phones",seg:"Corporate",s:1599,p:319.8,disc:0},
+ {d:"2024-04-03",r:"East",st:"Connecticut",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1250,p:187.5,disc:.1},
+ {d:"2024-04-17",r:"East",st:"New York",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2499,p:499.8,disc:0},
+ {d:"2024-05-01",r:"East",st:"Maryland",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:220,p:66,disc:0},
+ {d:"2024-05-15",r:"East",st:"Pennsylvania",cat:"Technology",sub:"Phones",seg:"Consumer",s:1699,p:339.8,disc:0},
+ {d:"2024-06-04",r:"East",st:"New York",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2799,p:559.8,disc:0},
+ {d:"2024-06-18",r:"East",st:"New Jersey",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:850,p:127.5,disc:0},
+ {d:"2024-07-02",r:"East",st:"Massachusetts",cat:"Technology",sub:"Accessories",seg:"Corporate",s:599,p:179.7,disc:0},
+ {d:"2024-07-16",r:"East",st:"New York",cat:"Technology",sub:"Phones",seg:"Consumer",s:1799,p:359.8,disc:0},
+ {d:"2024-08-06",r:"East",st:"Virginia",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2099,p:419.8,disc:0},
+ {d:"2024-08-20",r:"East",st:"Connecticut",cat:"Furniture",sub:"Tables",seg:"Corporate",s:1400,p:210,disc:.05},
+ {d:"2024-09-03",r:"East",st:"New York",cat:"Technology",sub:"Accessories",seg:"Consumer",s:799,p:239.7,disc:0},
+ {d:"2024-09-17",r:"East",st:"Pennsylvania",cat:"Technology",sub:"Phones",seg:"Consumer",s:1899,p:379.8,disc:0},
+ {d:"2024-10-01",r:"East",st:"New Jersey",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2299,p:459.8,disc:0},
+ {d:"2024-10-15",r:"East",st:"New York",cat:"Office Supplies",sub:"Binders",seg:"Corporate",s:190,p:57,disc:0},
+ {d:"2024-11-05",r:"East",st:"Massachusetts",cat:"Technology",sub:"Phones",seg:"Consumer",s:1599,p:319.8,disc:0},
+ {d:"2024-11-19",r:"East",st:"Maryland",cat:"Furniture",sub:"Bookcases",seg:"Corporate",s:950,p:142.5,disc:.05},
+ {d:"2024-12-04",r:"East",st:"New York",cat:"Technology",sub:"Laptops",seg:"Corporate",s:2999,p:599.8,disc:0},
+ {d:"2024-12-18",r:"East",st:"Virginia",cat:"Technology",sub:"Accessories",seg:"Consumer",s:699,p:209.7,disc:0},
+ {d:"2024-12-29",r:"East",st:"New Jersey",cat:"Technology",sub:"Phones",seg:"Corporate",s:1299,p:259.8,disc:0},
+
+ // ── SOUTH (consumer-heavy, mid-range, furniture drag on margins) ──
+ {d:"2023-01-12",r:"South",st:"Florida",cat:"Technology",sub:"Phones",seg:"Consumer",s:799,p:127.8,disc:.1},
+ {d:"2023-01-24",r:"South",st:"Georgia",cat:"Furniture",sub:"Tables",seg:"Consumer",s:480,p:38.4,disc:.15},
+ {d:"2023-02-06",r:"South",st:"Texas",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:68,p:20.4,disc:0},
+ {d:"2023-02-18",r:"South",st:"Florida",cat:"Technology",sub:"Laptops",seg:"Consumer",s:899,p:134.9,disc:.05},
+ {d:"2023-03-02",r:"South",st:"North Carolina",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:320,p:32,disc:.1},
+ {d:"2023-03-16",r:"South",st:"Florida",cat:"Technology",sub:"Accessories",seg:"Consumer",s:189,p:56.7,disc:0},
+ {d:"2023-03-28",r:"South",st:"Georgia",cat:"Technology",sub:"Phones",seg:"Consumer",s:699,p:111.8,disc:.1},
+ {d:"2023-04-09",r:"South",st:"Texas",cat:"Furniture",sub:"Tables",seg:"Corporate",s:560,p:44.8,disc:.15},
+ {d:"2023-04-21",r:"South",st:"Tennessee",cat:"Office Supplies",sub:"Binders",seg:"Consumer",s:42,p:12.6,disc:0},
+ {d:"2023-05-04",r:"South",st:"Florida",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1299,p:194.9,disc:.05},
+ {d:"2023-05-17",r:"South",st:"North Carolina",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:390,p:39,disc:.1},
+ {d:"2023-05-29",r:"South",st:"Georgia",cat:"Technology",sub:"Accessories",seg:"Consumer",s:249,p:74.7,disc:0},
+ {d:"2023-06-11",r:"South",st:"Texas",cat:"Technology",sub:"Phones",seg:"Consumer",s:849,p:135.8,disc:.1},
+ {d:"2023-06-23",r:"South",st:"Florida",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:420,p:42,disc:.1},
+ {d:"2023-07-06",r:"South",st:"Tennessee",cat:"Technology",sub:"Laptops",seg:"Consumer",s:999,p:149.9,disc:.05},
+ {d:"2023-07-18",r:"South",st:"Georgia",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:120,p:36,disc:0},
+ {d:"2023-08-01",r:"South",st:"Florida",cat:"Technology",sub:"Phones",seg:"Consumer",s:749,p:119.8,disc:.1},
+ {d:"2023-08-13",r:"South",st:"North Carolina",cat:"Furniture",sub:"Tables",seg:"Consumer",s:580,p:46.4,disc:.15},
+ {d:"2023-08-25",r:"South",st:"Texas",cat:"Technology",sub:"Accessories",seg:"Consumer",s:299,p:89.7,disc:0},
+ {d:"2023-09-07",r:"South",st:"Florida",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1499,p:224.9,disc:.05},
+ {d:"2023-09-19",r:"South",st:"Georgia",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:350,p:35,disc:.1},
+ {d:"2023-10-02",r:"South",st:"Tennessee",cat:"Technology",sub:"Phones",seg:"Consumer",s:899,p:143.8,disc:.1},
+ {d:"2023-10-14",r:"South",st:"Florida",cat:"Office Supplies",sub:"Paper",seg:"Consumer",s:55,p:16.5,disc:0},
+ {d:"2023-11-05",r:"South",st:"North Carolina",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1099,p:164.9,disc:.05},
+ {d:"2023-11-17",r:"South",st:"Georgia",cat:"Furniture",sub:"Tables",seg:"Consumer",s:640,p:51.2,disc:.15},
+ {d:"2023-12-01",r:"South",st:"Florida",cat:"Technology",sub:"Accessories",seg:"Consumer",s:399,p:119.7,disc:0},
+ {d:"2023-12-13",r:"South",st:"Texas",cat:"Technology",sub:"Phones",seg:"Corporate",s:1099,p:175.8,disc:.1},
+ {d:"2023-12-24",r:"South",st:"Tennessee",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:480,p:48,disc:.1},
+ {d:"2024-01-07",r:"South",st:"Florida",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1599,p:239.9,disc:.05},
+ {d:"2024-01-19",r:"South",st:"Georgia",cat:"Technology",sub:"Phones",seg:"Consumer",s:949,p:151.8,disc:.1},
+ {d:"2024-02-02",r:"South",st:"North Carolina",cat:"Furniture",sub:"Tables",seg:"Consumer",s:720,p:57.6,disc:.15},
+ {d:"2024-02-15",r:"South",st:"Texas",cat:"Office Supplies",sub:"Binders",seg:"Corporate",s:85,p:25.5,disc:0},
+ {d:"2024-03-01",r:"South",st:"Florida",cat:"Technology",sub:"Accessories",seg:"Consumer",s:449,p:134.7,disc:0},
+ {d:"2024-03-14",r:"South",st:"Tennessee",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1199,p:179.9,disc:.05},
+ {d:"2024-04-05",r:"South",st:"Georgia",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:510,p:51,disc:.1},
+ {d:"2024-04-18",r:"South",st:"Florida",cat:"Technology",sub:"Phones",seg:"Consumer",s:1099,p:175.8,disc:.1},
+ {d:"2024-05-03",r:"South",st:"North Carolina",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1699,p:254.9,disc:.05},
+ {d:"2024-05-16",r:"South",st:"Texas",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:490,p:49,disc:.1},
+ {d:"2024-06-02",r:"South",st:"Florida",cat:"Technology",sub:"Accessories",seg:"Consumer",s:549,p:164.7,disc:0},
+ {d:"2024-06-15",r:"South",st:"Georgia",cat:"Technology",sub:"Phones",seg:"Corporate",s:1199,p:191.8,disc:.1},
+ {d:"2024-07-01",r:"South",st:"Tennessee",cat:"Office Supplies",sub:"Storage",seg:"Consumer",s:145,p:43.5,disc:0},
+ {d:"2024-07-14",r:"South",st:"Florida",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1299,p:194.9,disc:.05},
+ {d:"2024-08-03",r:"South",st:"North Carolina",cat:"Furniture",sub:"Tables",seg:"Corporate",s:880,p:70.4,disc:.15},
+ {d:"2024-08-17",r:"South",st:"Georgia",cat:"Technology",sub:"Accessories",seg:"Consumer",s:399,p:119.7,disc:0},
+ {d:"2024-09-02",r:"South",st:"Texas",cat:"Technology",sub:"Phones",seg:"Consumer",s:1299,p:207.8,disc:.1},
+ {d:"2024-09-16",r:"South",st:"Florida",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1899,p:284.9,disc:.05},
+ {d:"2024-10-03",r:"South",st:"Tennessee",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:620,p:62,disc:.1},
+ {d:"2024-10-17",r:"South",st:"Georgia",cat:"Technology",sub:"Accessories",seg:"Corporate",s:499,p:149.7,disc:0},
+ {d:"2024-11-04",r:"South",st:"Florida",cat:"Technology",sub:"Phones",seg:"Consumer",s:1499,p:239.8,disc:.1},
+ {d:"2024-11-18",r:"South",st:"North Carolina",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1999,p:299.9,disc:.05},
+ {d:"2024-12-02",r:"South",st:"Texas",cat:"Furniture",sub:"Tables",seg:"Consumer",s:760,p:60.8,disc:.15},
+ {d:"2024-12-16",r:"South",st:"Georgia",cat:"Technology",sub:"Phones",seg:"Corporate",s:1099,p:175.8,disc:.1},
+ {d:"2024-12-28",r:"South",st:"Florida",cat:"Technology",sub:"Accessories",seg:"Consumer",s:699,p:209.7,disc:0},
+
+ // ── CENTRAL (Office Supplies heavy, lower AOV, stable margins) ──
+ {d:"2023-01-06",r:"Central",st:"Texas",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:95,p:28.5,disc:0},
+ {d:"2023-01-16",r:"Central",st:"Illinois",cat:"Technology",sub:"Phones",seg:"Consumer",s:549,p:109.8,disc:0},
+ {d:"2023-01-27",r:"Central",st:"Ohio",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:420,p:63,disc:.05},
+ {d:"2023-02-07",r:"Central",st:"Texas",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:240,p:72,disc:0},
+ {d:"2023-02-19",r:"Central",st:"Michigan",cat:"Technology",sub:"Laptops",seg:"Consumer",s:899,p:179.8,disc:0},
+ {d:"2023-03-05",r:"Central",st:"Wisconsin",cat:"Office Supplies",sub:"Binders",seg:"Consumer",s:68,p:20.4,disc:0},
+ {d:"2023-03-17",r:"Central",st:"Minnesota",cat:"Furniture",sub:"Tables",seg:"Corporate",s:680,p:102,disc:.05},
+ {d:"2023-03-28",r:"Central",st:"Ohio",cat:"Technology",sub:"Accessories",seg:"Consumer",s:249,p:74.7,disc:0},
+ {d:"2023-04-10",r:"Central",st:"Illinois",cat:"Office Supplies",sub:"Paper",seg:"Consumer",s:72,p:21.6,disc:0},
+ {d:"2023-04-22",r:"Central",st:"Texas",cat:"Technology",sub:"Phones",seg:"Corporate",s:749,p:149.8,disc:0},
+ {d:"2023-05-06",r:"Central",st:"Michigan",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:380,p:57,disc:0},
+ {d:"2023-05-18",r:"Central",st:"Missouri",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:185,p:55.5,disc:0},
+ {d:"2023-05-30",r:"Central",st:"Ohio",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1099,p:219.8,disc:0},
+ {d:"2023-06-12",r:"Central",st:"Wisconsin",cat:"Office Supplies",sub:"Binders",seg:"Consumer",s:55,p:16.5,disc:0},
+ {d:"2023-06-24",r:"Central",st:"Texas",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:520,p:78,disc:.05},
+ {d:"2023-07-08",r:"Central",st:"Illinois",cat:"Technology",sub:"Accessories",seg:"Consumer",s:199,p:59.7,disc:0},
+ {d:"2023-07-20",r:"Central",st:"Minnesota",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:110,p:33,disc:0},
+ {d:"2023-08-02",r:"Central",st:"Missouri",cat:"Technology",sub:"Phones",seg:"Consumer",s:649,p:129.8,disc:0},
+ {d:"2023-08-14",r:"Central",st:"Michigan",cat:"Furniture",sub:"Tables",seg:"Corporate",s:750,p:112.5,disc:.05},
+ {d:"2023-08-26",r:"Central",st:"Ohio",cat:"Office Supplies",sub:"Storage",seg:"Consumer",s:155,p:46.5,disc:0},
+ {d:"2023-09-09",r:"Central",st:"Texas",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1299,p:259.8,disc:0},
+ {d:"2023-09-21",r:"Central",st:"Illinois",cat:"Furniture",sub:"Chairs",seg:"Consumer",s:390,p:58.5,disc:0},
+ {d:"2023-10-05",r:"Central",st:"Kansas",cat:"Office Supplies",sub:"Binders",seg:"Corporate",s:88,p:26.4,disc:0},
+ {d:"2023-10-17",r:"Central",st:"Ohio",cat:"Technology",sub:"Accessories",seg:"Consumer",s:329,p:98.7,disc:0},
+ {d:"2023-11-01",r:"Central",st:"Minnesota",cat:"Technology",sub:"Phones",seg:"Consumer",s:899,p:179.8,disc:0},
+ {d:"2023-11-13",r:"Central",st:"Texas",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:130,p:39,disc:0},
+ {d:"2023-11-25",r:"Central",st:"Missouri",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:440,p:66,disc:.05},
+ {d:"2023-12-08",r:"Central",st:"Michigan",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1399,p:279.8,disc:0},
+ {d:"2023-12-19",r:"Central",st:"Wisconsin",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:195,p:58.5,disc:0},
+ {d:"2024-01-10",r:"Central",st:"Texas",cat:"Technology",sub:"Phones",seg:"Consumer",s:999,p:199.8,disc:0},
+ {d:"2024-01-23",r:"Central",st:"Ohio",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:145,p:43.5,disc:0},
+ {d:"2024-02-06",r:"Central",st:"Illinois",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:550,p:82.5,disc:.05},
+ {d:"2024-02-19",r:"Central",st:"Michigan",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1199,p:239.8,disc:0},
+ {d:"2024-03-05",r:"Central",st:"Texas",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:260,p:78,disc:0},
+ {d:"2024-03-19",r:"Central",st:"Minnesota",cat:"Technology",sub:"Accessories",seg:"Consumer",s:399,p:119.7,disc:0},
+ {d:"2024-04-02",r:"Central",st:"Missouri",cat:"Furniture",sub:"Tables",seg:"Corporate",s:820,p:123,disc:.05},
+ {d:"2024-04-16",r:"Central",st:"Ohio",cat:"Technology",sub:"Phones",seg:"Consumer",s:1099,p:219.8,disc:0},
+ {d:"2024-05-01",r:"Central",st:"Kansas",cat:"Office Supplies",sub:"Binders",seg:"Consumer",s:72,p:21.6,disc:0},
+ {d:"2024-05-14",r:"Central",st:"Texas",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1499,p:299.8,disc:0},
+ {d:"2024-06-03",r:"Central",st:"Illinois",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:460,p:69,disc:0},
+ {d:"2024-06-17",r:"Central",st:"Michigan",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:165,p:49.5,disc:0},
+ {d:"2024-07-01",r:"Central",st:"Ohio",cat:"Technology",sub:"Accessories",seg:"Consumer",s:449,p:134.7,disc:0},
+ {d:"2024-07-15",r:"Central",st:"Texas",cat:"Technology",sub:"Phones",seg:"Corporate",s:1199,p:239.8,disc:0},
+ {d:"2024-08-05",r:"Central",st:"Wisconsin",cat:"Furniture",sub:"Chairs",seg:"Corporate",s:620,p:93,disc:.05},
+ {d:"2024-08-19",r:"Central",st:"Minnesota",cat:"Office Supplies",sub:"Storage",seg:"Consumer",s:220,p:66,disc:0},
+ {d:"2024-09-03",r:"Central",st:"Missouri",cat:"Technology",sub:"Laptops",seg:"Consumer",s:1299,p:259.8,disc:0},
+ {d:"2024-09-17",r:"Central",st:"Ohio",cat:"Furniture",sub:"Tables",seg:"Corporate",s:890,p:133.5,disc:.05},
+ {d:"2024-10-02",r:"Central",st:"Texas",cat:"Office Supplies",sub:"Binders",seg:"Corporate",s:98,p:29.4,disc:0},
+ {d:"2024-10-16",r:"Central",st:"Illinois",cat:"Technology",sub:"Accessories",seg:"Consumer",s:499,p:149.7,disc:0},
+ {d:"2024-11-04",r:"Central",st:"Michigan",cat:"Technology",sub:"Phones",seg:"Consumer",s:1099,p:219.8,disc:0},
+ {d:"2024-11-18",r:"Central",st:"Kansas",cat:"Office Supplies",sub:"Paper",seg:"Corporate",s:175,p:52.5,disc:0},
+ {d:"2024-12-02",r:"Central",st:"Texas",cat:"Technology",sub:"Laptops",seg:"Corporate",s:1699,p:339.8,disc:0},
+ {d:"2024-12-16",r:"Central",st:"Ohio",cat:"Furniture",sub:"Bookcases",seg:"Consumer",s:520,p:78,disc:0},
+ {d:"2024-12-28",r:"Central",st:"Minnesota",cat:"Office Supplies",sub:"Storage",seg:"Corporate",s:285,p:85.5,disc:0},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let curPeriod = 'all';
+const charts = {};
+
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = '#1f2d42';
+Chart.defaults.font.family = "'Outfit', sans-serif";
+Chart.defaults.font.size = 11;
+
+// Set date
+document.getElementById('hdate').textContent = 'Jan 2023 – Dec 2024';
+
+// ============================================================
+// HELPERS
+// ============================================================
+const $ = id => document.getElementById(id);
+const fmt = n => n>=1e6 ? '$'+(n/1e6).toFixed(2)+'M' : n>=1e3 ? '$'+(n/1e3).toFixed(1)+'K' : '$'+n.toFixed(0);
+const pct = n => (n*100).toFixed(1)+'%';
+const sum = (arr,k) => arr.reduce((a,d)=>a+(d[k]||0),0);
+
+function group(arr, key, valKey='s') {
+  return arr.reduce((acc,d)=>{
+    acc[d[key]] = (acc[d[key]]||0)+d[valKey];
+    return acc;
+  },{});
+}
+
+// ============================================================
+// FILTERS
+// ============================================================
+function setPeriod(p, btn) {
+  curPeriod = p;
+  document.querySelectorAll('#periodPills .pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  applyFilters();
+}
+
+function resetFilters() {
+  curPeriod = 'all';
+  document.querySelectorAll('#periodPills .pill').forEach((b,i)=>b.classList.toggle('on',i===0));
+  $('fRegion').value = 'all';
+  $('fCat').value = 'all';
+  $('fSeg').value = 'all';
+  applyFilters();
+}
+
+function filterData() {
+  const region = $('fRegion').value;
+  const cat = $('fCat').value;
+  const seg = $('fSeg').value;
+
+  return DATA.filter(d => {
+    const yr = +d.d.slice(0,4);
+    const mo = +d.d.slice(5,7);
+    if (curPeriod==='2023' && yr!==2023) return false;
+    if (curPeriod==='2024' && yr!==2024) return false;
+    if (curPeriod==='H1-2024' && !(yr===2024&&mo<=6)) return false;
+    if (curPeriod==='H2-2024' && !(yr===2024&&mo>=7)) return false;
+    if (curPeriod==='Q4-2024' && !(yr===2024&&mo>=10)) return false;
+    if (region!=='all' && d.r!==region) return false;
+    if (cat!=='all' && d.cat!==cat) return false;
+    if (seg!=='all' && d.seg!==seg) return false;
+    return true;
+  });
+}
+
+function applyFilters() {
+  const data = filterData();
+  const region = $('fRegion').value;
+
+  // Context banner
+  const filters = [];
+  if (curPeriod!=='all') filters.push(curPeriod.replace('-',' '));
+  if (region!=='all') filters.push(region+' Region');
+  if ($('fCat').value!=='all') filters.push($('fCat').value);
+  if ($('fSeg').value!=='all') filters.push($('fSeg').value+' Segment');
+  const ctxBar = $('ctxBar');
+  if (filters.length) {
+    ctxBar.classList.add('show');
+    $('ctxText').textContent = `Viewing: ${filters.join(' · ')} — ${data.length} orders`;
+  } else {
+    ctxBar.classList.remove('show');
+  }
+
+  updateKPIs(data);
+  updateTrend(data);
+  updateRegionChart(data, region);
+  updateCatChart(data);
+  updateSubChart(data);
+  updateMarginChart(data);
+  updateTable(data, region);
+  updateQuarterly(data);
+  updateSegment(data);
+  updateDiscount(data);
+  updateInsights(data, region);
+}
+
+// ============================================================
+// KPIs
+// ============================================================
+function updateKPIs(data) {
+  const totalS = sum(data,'s'), totalP = sum(data,'p');
+  const margin = totalS>0 ? totalP/totalS : 0;
+  const orders = data.length, aov = orders>0 ? totalS/orders : 0;
+
+  // YoY
+  const d23 = data.filter(d=>d.d.startsWith('2023'));
+  const d24 = data.filter(d=>d.d.startsWith('2024'));
+  const s23=sum(d23,'s'), s24=sum(d24,'s');
+  const p23=sum(d23,'p'), p24=sum(d24,'p');
+
+  $('kSales').textContent = fmt(totalS);
+  $('kProfit').textContent = fmt(totalP);
+  $('kMargin').textContent = pct(margin);
+  $('kOrders').textContent = orders;
+  $('kAOV').textContent = fmt(aov);
+
+  function setYoY(elId, v23, v24) {
+    const el = $(elId);
+    if (!v23||!v24) { el.textContent='No YoY'; el.className='kpi-change neutral'; return; }
+    const g = (v24-v23)/v23;
+    const sign = g>=0?'+':'';
+    el.textContent = `${sign}${(g*100).toFixed(1)}% YoY`;
+    el.className = `kpi-change ${g>=0?'up':'down'}`;
+  }
+  setYoY('kSalesC', s23, s24);
+  setYoY('kProfitC', p23, p24);
+  setYoY('kOrdersC', d23.length, d24.length);
+}
+
+// ============================================================
+// TREND
+// ============================================================
+function updateTrend(data) {
+  const salesM={}, profitM={};
+  data.forEach(d => {
+    const k = d.d.slice(0,7);
+    salesM[k]=(salesM[k]||0)+d.s;
+    profitM[k]=(profitM[k]||0)+d.p;
+  });
+  const keys = Object.keys(salesM).sort();
+  const mnames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const labels = keys.map(k=>`${mnames[+k.slice(5,7)-1]} '${k.slice(2,4)}`);
+
+  destroyChart('cTrend');
+  charts.cTrend = new Chart($('cTrend'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Revenue',data:keys.map(k=>salesM[k]),borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.08)',borderWidth:2,fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#38bdf8'},
+        {label:'Profit',data:keys.map(k=>profitM[k]),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.06)',borderWidth:2,fill:true,tension:.4,pointRadius:3,pointBackgroundColor:'#10b981'}
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{boxWidth:10,padding:12}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{color:'rgba(31,45,66,.5)'},ticks:{maxRotation:30}},
+        y:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>fmt(v)}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// REGION / STATE CHART — adapts based on filter
+// ============================================================
+function updateRegionChart(data, regionFilter) {
+  let map, title, sub;
+  if (regionFilter !== 'all') {
+    // Drill down into states within that region
+    map = group(data, 'st');
+    title = `Sales by State — ${regionFilter}`;
+    sub = `Breakdown within ${regionFilter} region`;
+    $('regionChartTitle').textContent = title;
+    $('regionChartSub').textContent = sub;
+  } else {
+    map = group(data, 'r');
+    $('regionChartTitle').textContent = 'Sales by Region';
+    $('regionChartSub').textContent = 'Ranked revenue comparison';
+  }
+
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const colors = ['#38bdf8','#10b981','#fb923c','#a78bfa','#f59e0b','#f43f5e','#06b6d4'];
+
+  destroyChart('cRegion');
+  charts.cRegion = new Chart($('cRegion'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(e=>e[0]),
+      datasets:[{
+        label:'Revenue',data:sorted.map(e=>e[1]),
+        backgroundColor:sorted.map((_,i)=>colors[i%colors.length]),
+        borderRadius:6,borderSkipped:false
+      }]
+    },
+    options:{
+      indexAxis:'y',responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.parsed.x)}`}}},
+      scales:{
+        x:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>fmt(v)}},
+        y:{grid:{display:false}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// CATEGORY DOUGHNUT
+// ============================================================
+function updateCatChart(data) {
+  const map = group(data,'cat');
+  const labels=Object.keys(map), vals=Object.values(map);
+  const total=vals.reduce((a,b)=>a+b,0);
+
+  destroyChart('cCat');
+  charts.cCat = new Chart($('cCat'),{
+    type:'doughnut',
+    data:{
+      labels,
+      datasets:[{data:vals,backgroundColor:['#38bdf8','#fb923c','#10b981'],borderColor:'#111827',borderWidth:3,hoverOffset:6}]
+    },
+    options:{
+      responsive:true,
+      plugins:{
+        legend:{position:'bottom',labels:{padding:14,boxWidth:10}},
+        tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.parsed)} (${(c.parsed/total*100).toFixed(1)}%)`}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// SUB-CATEGORY BAR
+// ============================================================
+function updateSubChart(data) {
+  const map = group(data,'sub');
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,7);
+
+  destroyChart('cSub');
+  charts.cSub = new Chart($('cSub'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(e=>e[0]),
+      datasets:[{label:'Revenue',data:sorted.map(e=>e[1]),backgroundColor:'rgba(167,139,250,.7)',borderColor:'#a78bfa',borderWidth:1,borderRadius:5}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{maxRotation:35}},
+        y:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>fmt(v)}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// MARGIN CHART
+// ============================================================
+function updateMarginChart(data) {
+  const salesMap={}, profitMap={};
+  data.forEach(d=>{
+    salesMap[d.cat]=(salesMap[d.cat]||0)+d.s;
+    profitMap[d.cat]=(profitMap[d.cat]||0)+d.p;
+  });
+  const labels=Object.keys(salesMap);
+  const margins=labels.map(l=>salesMap[l]>0?(profitMap[l]/salesMap[l]*100):0);
+  const bgColors=margins.map(m=>m>=20?'rgba(16,185,129,.75)':m>=13?'rgba(245,158,11,.75)':'rgba(244,63,94,.75)');
+
+  destroyChart('cMargin');
+  charts.cMargin = new Chart($('cMargin'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{label:'Margin %',data:margins,backgroundColor:bgColors,borderRadius:6}]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>v.toFixed(0)+'%'},suggestedMax:30}
+      }
+    }
+  });
+}
+
+// ============================================================
+// TABLE — adapts: if region filter → show sub-categories/states
+// ============================================================
+function updateTable(data, regionFilter) {
+  const useState = regionFilter !== 'all';
+  const groupKey = useState ? 'st' : 'r';
+  $('tableTitle').textContent = useState ? `State Breakdown — ${regionFilter}` : 'Regional Performance Table';
+  $('tableCol1Hdr').textContent = useState ? 'State' : 'Region';
+
+  const salesMap={}, profitMap={};
+  data.forEach(d=>{
+    const k=d[groupKey];
+    salesMap[k]=(salesMap[k]||0)+d.s;
+    profitMap[k]=(profitMap[k]||0)+d.p;
+  });
+
+  // YoY per group
+  const yoy23={}, yoy24={};
+  data.forEach(d=>{
+    const k=d[groupKey];
+    if(d.d.startsWith('2023')){ yoy23[k]=(yoy23[k]||0)+d.s; }
+    if(d.d.startsWith('2024')){ yoy24[k]=(yoy24[k]||0)+d.s; }
+  });
+
+  const total = Object.values(salesMap).reduce((a,b)=>a+b,0);
+  const sorted = Object.entries(salesMap).sort((a,b)=>b[1]-a[1]);
+
+  $('tBody').innerHTML = sorted.map(([name, s])=>{
+    const p=profitMap[name]||0;
+    const m=s>0?p/s*100:0;
+    const share=total>0?s/total*100:0;
+    const s23=yoy23[name]||0, s24=yoy24[name]||0;
+    const growthPct=s23>0?((s24-s23)/s23*100):null;
+    const badge=growthPct!==null
+      ?`<span class="badge ${growthPct>=0?'b-up':'b-dn'}">${growthPct>=0?'▲':'▼'}${Math.abs(growthPct).toFixed(0)}%</span>`
+      :`<span class="badge b-na">—</span>`;
+    const barW=Math.max(share*1.6,2);
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${name}</td>
+      <td style="color:var(--accent)">${fmt(s)}</td>
+      <td style="color:var(--green)">${fmt(p)}</td>
+      <td>${m.toFixed(1)}%</td>
+      <td><div class="mbar-wrap"><div class="mbar" style="width:${barW}px"></div><span style="font-size:10px;color:var(--muted)">${share.toFixed(0)}%</span></div></td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// QUARTERLY
+// ============================================================
+function updateQuarterly(data) {
+  const q = {2023:{Q1:0,Q2:0,Q3:0,Q4:0}, 2024:{Q1:0,Q2:0,Q3:0,Q4:0}};
+  data.forEach(d=>{
+    const yr=+d.d.slice(0,4), mo=+d.d.slice(5,7);
+    if(!q[yr]) return;
+    const qKey=mo<=3?'Q1':mo<=6?'Q2':mo<=9?'Q3':'Q4';
+    q[yr][qKey]+=d.s;
+  });
+  const qs=['Q1','Q2','Q3','Q4'];
+
+  destroyChart('cQtr');
+  charts.cQtr = new Chart($('cQtr'),{
+    type:'bar',
+    data:{
+      labels:qs,
+      datasets:[
+        {label:'2023',data:qs.map(k=>q[2023][k]),backgroundColor:'rgba(56,189,248,.5)',borderColor:'#38bdf8',borderWidth:1,borderRadius:4},
+        {label:'2024',data:qs.map(k=>q[2024][k]),backgroundColor:'rgba(251,146,60,.6)',borderColor:'#fb923c',borderWidth:1,borderRadius:4}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>fmt(v)}}
+      }
+    }
+  });
+}
+
+// ============================================================
+// SEGMENT STACKED
+// ============================================================
+function updateSegment(data) {
+  const months={};
+  data.forEach(d=>{
+    const k=d.d.slice(0,7);
+    if(!months[k]) months[k]={Consumer:0,Corporate:0};
+    months[k][d.seg]=(months[k][d.seg]||0)+d.s;
+  });
+  const keys=Object.keys(months).sort();
+  const mnames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const labels=keys.map(k=>`${mnames[+k.slice(5,7)-1]}'${k.slice(2,4)}`);
+
+  destroyChart('cSegment');
+  charts.cSegment = new Chart($('cSegment'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Consumer',data:keys.map(k=>months[k].Consumer||0),backgroundColor:'rgba(167,139,250,.7)',stack:'s'},
+        {label:'Corporate',data:keys.map(k=>months[k].Corporate||0),backgroundColor:'rgba(56,189,248,.7)',stack:'s'}
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{maxRotation:35}},
+        y:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>fmt(v)},stacked:true}
+      }
+    }
+  });
+}
+
+// ============================================================
+// DISCOUNT IMPACT
+// ============================================================
+function updateDiscount(data) {
+  const buckets = {'No Discount':{s:0,p:0},'1–5%':{s:0,p:0},'6–10%':{s:0,p:0},'11–15%':{s:0,p:0}};
+  data.forEach(d=>{
+    const b=d.disc===0?'No Discount':d.disc<=.05?'1–5%':d.disc<=.10?'6–10%':'11–15%';
+    buckets[b].s+=d.s; buckets[b].p+=d.p;
+  });
+  const labels=Object.keys(buckets);
+  const margins=labels.map(l=>buckets[l].s>0?(buckets[l].p/buckets[l].s*100):0);
+
+  destroyChart('cDiscount');
+  charts.cDiscount = new Chart($('cDiscount'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Profit Margin %',data:margins,
+        backgroundColor:margins.map(m=>m>=25?'rgba(16,185,129,.7)':m>=18?'rgba(245,158,11,.7)':'rgba(244,63,94,.7)'),
+        borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Margin: ${c.parsed.y.toFixed(1)}%`}}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'rgba(31,45,66,.5)'},ticks:{callback:v=>v.toFixed(0)+'%'},suggestedMax:35}
+      }
+    }
+  });
+}
+
+// ============================================================
+// INSIGHTS
+// ============================================================
+function updateInsights(data, regionFilter) {
+  const ins = [];
+  const totalS = sum(data,'s'), totalP = sum(data,'p');
+  const margin = totalS>0?totalP/totalS:0;
+
+  // Top/bottom region (only when all regions shown)
+  if (regionFilter==='all') {
+    const rmap = {};
+    data.forEach(d=>{
+      if(!rmap[d.r]) rmap[d.r]={s:0,p:0};
+      rmap[d.r].s+=d.s; rmap[d.r].p+=d.p;
+    });
+    const rsorted = Object.entries(rmap).sort((a,b)=>b[1].s-a[1].s);
+    if(rsorted.length>=2) {
+      const top=rsorted[0], bot=rsorted[rsorted.length-1];
+      const topMargin=top[1].s>0?top[1].p/top[1].s:0;
+      ins.push({type:'🏆 Top Region',cls:'pos',text:`${top[0]} leads with ${fmt(top[1].s)} revenue and a ${pct(topMargin)} profit margin. Highest contribution to overall portfolio — replicate sales strategy in other regions.`});
+      const botMargin=bot[1].s>0?bot[1].p/bot[1].s:0;
+      ins.push({type:'⚠️ Attention Needed',cls:'neg',text:`${bot[0]} is the lowest-performing region at ${fmt(bot[1].s)} in sales (${pct(botMargin)} margin). Investigate demand patterns and consider targeted marketing spend increase.`});
+    }
+  } else {
+    // State-level insight
+    const smap = {};
+    data.forEach(d=>{
+      if(!smap[d.st]) smap[d.st]={s:0,p:0};
+      smap[d.st].s+=d.s; smap[d.st].p+=d.p;
+    });
+    const ssorted = Object.entries(smap).sort((a,b)=>b[1].s-a[1].s);
+    if(ssorted.length>0) {
+      const topSt=ssorted[0];
+      ins.push({type:`📍 ${regionFilter} Region`,cls:'pos',text:`${topSt[0]} is the top-performing state within ${regionFilter} with ${fmt(topSt[1].s)} in revenue. Focus on expanding the ${topSt[0]} customer base through upselling and cross-selling.`});
+    }
+  }
+
+  // Category margin insight
+  const cmap={};
+  data.forEach(d=>{
+    if(!cmap[d.cat]) cmap[d.cat]={s:0,p:0};
+    cmap[d.cat].s+=d.s; cmap[d.cat].p+=d.p;
+  });
+  const cats=Object.entries(cmap).map(([c,v])=>({c,m:v.s>0?v.p/v.s:0,s:v.s}));
+  if(cats.length>1) {
+    const best=cats.reduce((a,b)=>a.m>b.m?a:b);
+    const worst=cats.reduce((a,b)=>a.m<b.m?a:b);
+    ins.push({type:'💡 Margin Analysis',cls:'neu',text:`${best.c} earns the highest margin at ${pct(best.m)} vs ${worst.c} at ${pct(worst.m)}. Shift 10% of ${worst.c} marketing budget to ${best.c} to boost blended margin by ~2–3 pts.`});
+  }
+
+  // Discount drag
+  const discounted = data.filter(d=>d.disc>0);
+  const nonDisc = data.filter(d=>d.disc===0);
+  if(discounted.length && nonDisc.length) {
+    const mD=sum(discounted,'s')>0?sum(discounted,'p')/sum(discounted,'s'):0;
+    const mN=sum(nonDisc,'s')>0?sum(nonDisc,'p')/sum(nonDisc,'s'):0;
+    ins.push({type:'🏷️ Discount Impact',cls:mD<mN?'neg':'neu',text:`Discounted orders yield ${pct(mD)} margin vs ${pct(mN)} for full-price orders — a ${((mN-mD)*100).toFixed(1)} pt gap. Cap discounts at 5% to protect profitability without sacrificing win rate.`});
+  }
+
+  // YoY growth
+  const d23=data.filter(d=>d.d.startsWith('2023')), d24=data.filter(d=>d.d.startsWith('2024'));
+  if(d23.length&&d24.length) {
+    const s23=sum(d23,'s'), s24=sum(d24,'s');
+    const g=(s24-s23)/s23;
+    ins.push({type:`${g>=0?'📈':'📉'} YoY Growth`,cls:g>=0?'pos':'neg',text:`Revenue ${g>=0?'grew':'declined'} ${g>=0?'+':''}${(g*100).toFixed(1)}% from ${fmt(s23)} (2023) to ${fmt(s24)} (2024). ${g>=0?'Strong momentum — sustain investment in top-performing categories.':'Requires strategic review — identify and address root causes by Q1.'}`});
+  }
+
+  // Segment split
+  const conData=data.filter(d=>d.seg==='Consumer'), corpData=data.filter(d=>d.seg==='Corporate');
+  if(conData.length&&corpData.length) {
+    const conS=sum(conData,'s'), corpS=sum(corpData,'s');
+    const total2=conS+corpS;
+    ins.push({type:'👥 Segment Mix',cls:'neu',text:`Consumer: ${(conS/total2*100).toFixed(0)}% of revenue | Corporate: ${(corpS/total2*100).toFixed(0)}%. Corporate segment shows ${pct(sum(corpData,'p')/corpS)} margin vs Consumer at ${pct(sum(conData,'p')/conS)}. Prioritize B2B pipeline expansion.`});
+  }
+
+  $('insGrid').innerHTML = ins.map(i=>`
+    <div class="ins ${i.cls}">
+      <div class="ins-type">${i.type}</div>
+      <div class="ins-text">${i.text}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// DESTROY CHART HELPER
+// ============================================================
+function destroyChart(id) {
+  if(charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+applyFilters();
+</script>
+</body>
+</html>
